@@ -1,13 +1,18 @@
 # defining class nodes along with the parameters
+# Node of a Huffman Tree
 class Nodes:
-    def __init__(self, symbols, probability, left=None, right=None):
-        # unique characters present in the text
-        self.symbols=symbols
-        # probability of getting a certain character
-        self.probability=probability
-        # left child for creating huffman tree
-        self.left=left
-        # right child for creating huffman tree
-        self.right=right
-        # 0 or 1 for denoting either left or right
-        self.code=''
+    def __init__(self, probability, symbol, left=None, right=None):
+        # probability of the symbol
+        self.probability = probability
+
+        # the symbol
+        self.symbol = symbol
+
+        # the left node
+        self.left = left
+
+        # the right node
+        self.right = right
+
+        # the tree direction or edge value(0 or 1)
+        self.code = ''

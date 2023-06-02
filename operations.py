@@ -1,47 +1,116 @@
-import node
-# for getting the unique characters and count the repeating characters
+from node import Nodes
 
-def ChractersCount(text):
-    symbols={}
-    for char in text:
-        if(symbols.get(char)==None):
-            symbols[char]=1
+def CalculateProbability(the_data):
+    the_symbols = dict()
+    for item in the_data:
+        if the_symbols.get(item) == None:
+            the_symbols[item] = 1
         else:
-            symbols[char]+=1
-    return symbols
+            the_symbols[item] += 1
+    return the_symbols
 
 
-# getting codes of symbols in huffman tree
-def get_codes(node:node.Nodes,old_code=''):
-    codes = {}
-    new_code=old_code+ str(node.code)
-    # for traversing in child nodes
-    if(node.left):
-        get_codes(node.left,new_code)
-    if(node.right):
-        get_codes(node.right,new_code)
-    if(not node.left and not node.right):
-        codes[node.symbols]=new_code
-    return codes
+# A supporting function in order to print the codes of symbols by travelling a Huffman Tree
+the_codes = dict()
 
-# Outputs the encoded result
-def get_encode_output(text,code):
-    result=[]
-    for char in text:
-        print(code[char],end="")
-        result.append(code[char])
-    output=""
-    for x in result:
-        output+=x
-    return output
 
-# for comparing the space before and after compression
-def get_space_difference(text,code):
-    before_compress=len(text)*8
-    after_compress=0
-    symbols=code.keys()
-    for char in symbols:
-        count=text.count(char)
-        after_compress+=count*len(code[char])
-    print("Before compression space(in bits) = ",before_compress)
-    print("After compress space(in bits) = ",after_compress)
+def CalculateCodes(node, value=''):
+    # a huffman code for current node
+    newValue = value + str(node.code)
+
+    if (node.left):
+        CalculateCodes(node.left, newValue)
+    if (node.right):
+        CalculateCodes(node.right, newValue)
+
+    if (not node.left and not node.right):
+        the_codes[node.symbol] = newValue
+
+    return the_codes
+
+
+# A supporting function in order to get the encoded result
+
+
+def OutputEncoded(the_data, coding):
+    encodingOutput = []
+    for element in the_data:
+        # print(coding[element], end = '')
+        encodingOutput.append(coding[element])
+
+    the_string = ''.join([str(item) for item in encodingOutput])
+    return the_string
+
+
+# A supporting function in order to calculate the space difference between compressed and non compressed data
+
+def TotalGain(the_data, coding):
+    # total bit space to store the data before compression
+    beforeCompression = len(the_data) * 8
+    afterCompression = 0
+    the_symbols = coding.keys()
+    for symbol in the_symbols:
+        the_count = the_data.count(symbol)
+        # calculating how many bit is required for that symbol in total
+        afterCompression += the_count * len(coding[symbol])
+    print("Space usage before compression (in bits):", beforeCompression)
+    print("Space usage after compression (in bits):", afterCompression)
+
+
+def HuffmanEncoding(the_data):
+    symbolWithProbs = CalculateProbability(the_data)
+    the_symbols = symbolWithProbs.keys()
+    the_probabilities = symbolWithProbs.values()
+    print("symbols: ", the_symbols)
+    print("probabilities: ", the_probabilities)
+
+    the_nodes = []
+
+    # converting symbols and probabilities into huffman tree nodes
+    for symbol in the_symbols:
+        the_nodes.append(Nodes(symbolWithProbs.get(symbol), symbol))
+
+    while len(the_nodes) > 1:
+        # sorting all the nodes in ascending order based on their probability
+        the_nodes = sorted(the_nodes, key=lambda x: x.probability)
+        # for node in nodes:
+        #      print(node.symbol, node.prob)
+
+        # picking two smallest nodes
+        right = the_nodes[0]
+        left = the_nodes[1]
+
+        left.code = 0
+        right.code = 1
+
+        # combining the 2 smallest nodes to create new node
+        newNode = Nodes(left.probability + right.probability, left.symbol + right.symbol, left, right)
+
+        the_nodes.remove(left)
+        the_nodes.remove(right)
+        the_nodes.append(newNode)
+
+    huffmanEncoding = CalculateCodes(the_nodes[0])
+    print("symbols with codes", huffmanEncoding)
+    TotalGain(the_data, huffmanEncoding)
+    encodedOutput = OutputEncoded(the_data, huffmanEncoding)
+    return encodedOutput, the_nodes[0]
+
+
+def HuffmanDecoding(encodedData, huffmanTree):
+    treeHead = huffmanTree
+    decodedOutput = []
+    for x in encodedData:
+        if x == '1':
+            huffmanTree = huffmanTree.right
+        elif x == '0':
+            huffmanTree = huffmanTree.left
+        try:
+            if huffmanTree.left.symbol == None and huffmanTree.right.symbol == None:
+                pass
+        except AttributeError:
+            decodedOutput.append(huffmanTree.symbol)
+            huffmanTree = treeHead
+
+    string = ''.join([str(item) for item in decodedOutput])
+    return string
