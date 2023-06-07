@@ -53,7 +53,7 @@ async def decompress(upload_file: UploadFile = File(...)):
                 yield chunk
 
     headers = {
-        'Content-Disposition': f'attachment; filename="{upload_file.filename}.decompressed"'
+        'Content-Disposition': f'attachment; filename="{file_name}.decompressed"'
     }
 
     # Return the compressed file as a downloadable response

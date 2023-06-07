@@ -7,7 +7,7 @@ app=FastAPI()
 app.include_router(routers.router)
 
 origins = [
-    "https://localhost:3000",
+    "http://localhost:3000",
     "http://localhost",
     "http://localhost:8080",
 ]
