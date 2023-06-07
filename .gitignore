@@ -1,3 +1,4 @@
 .idea/
 __pycache__/
 temp/
+filecompressor/node_modules
