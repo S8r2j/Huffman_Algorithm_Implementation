@@ -1,4 +1,4 @@
-import heapq
+import heapq  #priority queue
 from collections import defaultdict
 from pathlib import Path
 from node import HuffmanNode
@@ -45,7 +45,7 @@ def compress_file(file_path):
     compressed_data = "".join(huffman_codes[char] for char in data)
     padding = 8 - len(compressed_data) % 8
     compressed_data += padding * "0"
-
+#conversion  into bytes
     byte_array = bytearray()
     for i in range(0, len(compressed_data), 8):
         byte = compressed_data[i:i + 8]

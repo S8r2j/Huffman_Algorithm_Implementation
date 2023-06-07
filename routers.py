@@ -17,23 +17,9 @@ async def compress(upload_file: UploadFile = File(...)):
         temp_file.write(await upload_file.read())
 
     compressed_file_path = compress_file(file_path)
-    def iterate_file():
-        with open(compressed_file_path, "rb") as file:
-            while True:
-                chunk=file.read(8192)
-                if not chunk:
-                    break
-                yield chunk
-    headers = {
-        'Content-Disposition': f'attachment; filename="{file_name.filename}.compressed"'
-    }
     global compress_file_by_compressor
-    if not compress_file_by_compressor:
-        compress_file_by_compressor=True
-    global compressed_file
-    compressed_file=compressed_file_path
-    # Return the compressed file as a downloadable response
-    return StreamingResponse(iterate_file(), media_type="application/octet-stream", headers=headers)
+    compress_file_by_compressor=True
+    return compressed_file_path
 
 
 @router.post("/decompress")
@@ -46,20 +32,7 @@ async def decompress(upload_file: UploadFile = File(...)):
         temp_file.write(await upload_file.read())
 
     decompressed_file_path = decompress_file(file_path)
-    def iterate_file():
-        with open(decompressed_file_path, "rb") as file:
-            while True:
-                chunk = file.read(8192)#8192 is the number of bytes that will be read in a single chunk
-                if not chunk:
-                    break
-                yield chunk
-
-    headers = {
-        'Content-Disposition': f'attachment; filename="{file_name.filename}.decompressed"'
-    }
-
-    # Return the compressed file as a downloadable response
-    return StreamingResponse(iterate_file(), media_type="application/octet-stream", headers=headers)
+    return decompressed_file_path
 
 @router.get("/compression_ratio")
 def compression_ratio():
