@@ -1,116 +1,83 @@
-from node import Nodes
+import heapq
+from collections import defaultdict
+from pathlib import Path
+from node import HuffmanNode
 
-def CalculateProbability(the_data):
-    the_symbols = dict()
-    for item in the_data:
-        if the_symbols.get(item) == None:
-            the_symbols[item] = 1
-        else:
-            the_symbols[item] += 1
-    return the_symbols
-
-
-# A supporting function in order to print the codes of symbols by travelling a Huffman Tree
-the_codes = dict()
+def generate_frequency_table(data):
+    frequency_table = defaultdict(int)
+    for char in data:
+        frequency_table[char] += 1
+    return frequency_table
 
 
-def CalculateCodes(node, value=''):
-    # a huffman code for current node
-    newValue = value + str(node.code)
+def build_huffman_tree(frequency_table):
+    priority_queue = [[weight, HuffmanNode(char, weight)] for char, weight in frequency_table.items()]
+    heapq.heapify(priority_queue)
 
-    if (node.left):
-        CalculateCodes(node.left, newValue)
-    if (node.right):
-        CalculateCodes(node.right, newValue)
+    while len(priority_queue) > 1:
+        lo = heapq.heappop(priority_queue)
+        hi = heapq.heappop(priority_queue)
+        merged_node = HuffmanNode(None, lo[0] + hi[0], lo[1], hi[1])
+        heapq.heappush(priority_queue, [merged_node.freq, merged_node])
 
-    if (not node.left and not node.right):
-        the_codes[node.symbol] = newValue
-
-    return the_codes
+    return priority_queue[0][1]
 
 
-# A supporting function in order to get the encoded result
+def generate_huffman_codes(node, current_code, huffman_codes):
+    if node.char:
+        huffman_codes[node.char] = current_code
+        return
+
+    generate_huffman_codes(node.left, current_code + "0", huffman_codes)
+    generate_huffman_codes(node.right, current_code + "1", huffman_codes)
 
 
-def OutputEncoded(the_data, coding):
-    encodingOutput = []
-    for element in the_data:
-        # print(coding[element], end = '')
-        encodingOutput.append(coding[element])
+def compress_file(file_path):
+    with open(file_path, "rb") as file:
+        data = file.read()
 
-    the_string = ''.join([str(item) for item in encodingOutput])
-    return the_string
+    frequency_table = generate_frequency_table(data)
+    huffman_tree = build_huffman_tree(frequency_table)
+    huffman_codes = {}
+    generate_huffman_codes(huffman_tree, "", huffman_codes)
+    global var
+    var=huffman_codes
+    compressed_data = "".join(huffman_codes[char] for char in data)
+    padding = 8 - len(compressed_data) % 8
+    compressed_data += padding * "0"
 
+    byte_array = bytearray()
+    for i in range(0, len(compressed_data), 8):
+        byte = compressed_data[i:i + 8]
+        byte_array.append(int(byte, 2))
 
-# A supporting function in order to calculate the space difference between compressed and non compressed data
-
-def TotalGain(the_data, coding):
-    # total bit space to store the data before compression
-    beforeCompression = len(the_data) * 8
-    afterCompression = 0
-    the_symbols = coding.keys()
-    for symbol in the_symbols:
-        the_count = the_data.count(symbol)
-        # calculating how many bit is required for that symbol in total
-        afterCompression += the_count * len(coding[symbol])
-    print("Space usage before compression (in bits):", beforeCompression)
-    print("Space usage after compression (in bits):", afterCompression)
-
-
-def HuffmanEncoding(the_data):
-    symbolWithProbs = CalculateProbability(the_data)
-    the_symbols = symbolWithProbs.keys()
-    the_probabilities = symbolWithProbs.values()
-    print("symbols: ", the_symbols)
-    print("probabilities: ", the_probabilities)
-
-    the_nodes = []
-
-    # converting symbols and probabilities into huffman tree nodes
-    for symbol in the_symbols:
-        the_nodes.append(Nodes(symbolWithProbs.get(symbol), symbol))
-
-    while len(the_nodes) > 1:
-        # sorting all the nodes in ascending order based on their probability
-        the_nodes = sorted(the_nodes, key=lambda x: x.probability)
-        # for node in nodes:
-        #      print(node.symbol, node.prob)
-
-        # picking two smallest nodes
-        right = the_nodes[0]
-        left = the_nodes[1]
-
-        left.code = 0
-        right.code = 1
-
-        # combining the 2 smallest nodes to create new node
-        newNode = Nodes(left.probability + right.probability, left.symbol + right.symbol, left, right)
-
-        the_nodes.remove(left)
-        the_nodes.remove(right)
-        the_nodes.append(newNode)
-
-    huffmanEncoding = CalculateCodes(the_nodes[0])
-    print("symbols with codes", huffmanEncoding)
-    TotalGain(the_data, huffmanEncoding)
-    encodedOutput = OutputEncoded(the_data, huffmanEncoding)
-    return encodedOutput, the_nodes[0]
+    compressed_file_path = Path(file_path).with_suffix(".compressed")
+    with open(compressed_file_path, "wb") as output_file:
+        output_file.write(bytes([padding]))
+        output_file.write(byte_array)
+    return compressed_file_path
 
 
-def HuffmanDecoding(encodedData, huffmanTree):
-    treeHead = huffmanTree
-    decodedOutput = []
-    for x in encodedData:
-        if x == '1':
-            huffmanTree = huffmanTree.right
-        elif x == '0':
-            huffmanTree = huffmanTree.left
-        try:
-            if huffmanTree.left.symbol == None and huffmanTree.right.symbol == None:
-                pass
-        except AttributeError:
-            decodedOutput.append(huffmanTree.symbol)
-            huffmanTree = treeHead
+def decompress_file(file_path):
+    with open(file_path, "rb") as file:
+        padding = int.from_bytes(file.read(1), "big")
+        compressed_data = file.read()
 
-    string = ''.join([str(item) for item in decodedOutput])
-    return string
+    bit_string = "".join(format(byte, "08b") for byte in compressed_data)
+    bit_string = bit_string[:-padding]
+    huffman_codes=var
+    decoded_data = ""
+    current_code = ""
+    for bit in bit_string:
+        current_code += bit
+        for char, code in huffman_codes.items():
+            if code == current_code:
+                decoded_data += chr(char)
+                current_code = ""
+                break
+
+    decompressed_file_path = Path(file_path).with_suffix(".decompressed")
+    with open(decompressed_file_path, "w",encoding="utf-8") as output_file:
+        output_file.write(decoded_data)
+
+    return decompressed_file_path
