@@ -35,17 +35,16 @@ async def compress(upload_file: UploadFile = File(...)):
     # Return the compressed file as a downloadable response
     return StreamingResponse(iterate_file(), media_type="application/octet-stream", headers=headers)
 
-
 @router.post("/decompress")
 async def decompress(upload_file: UploadFile = File(...)):
     global compress_file_by_compressor
     if not compress_file_by_compressor:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED,detail="Initially the file should be compressed using above compressor API")
-    file_path = f"temp/{upload_file.filename}"
-    with open(file_path, "wb") as temp_file:
-        temp_file.write(await upload_file.read())
-
-    decompressed_file_path = decompress_file(file_path)
+    # file_path = f"temp/{upload_file.filename}"
+    # with open(file_path, "wb") as temp_file:
+    #     temp_file.write(await upload_file.read())
+    global compressed_file
+    decompressed_file_path = decompress_file(compressed_file)
     def iterate_file():
         with open(decompressed_file_path, "rb") as file:
             while True:
@@ -55,7 +54,7 @@ async def decompress(upload_file: UploadFile = File(...)):
                 yield chunk
 
     headers = {
-        'Content-Disposition': f'attachment; filename="{file_name.filename}.decompressed"'
+        'Content-Disposition': f'attachment; filename="{upload_file.filename}.decompressed"'
     }
 
     # Return the compressed file as a downloadable response
