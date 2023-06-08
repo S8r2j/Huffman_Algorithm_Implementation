@@ -53,7 +53,6 @@ const FileUploader = () => {
 
     axios.request(config)
     .then((response) => {
-      console.log(JSON.stringify(response.data));
       setData(response)
     })
     .catch((error) => {
@@ -62,23 +61,21 @@ const FileUploader = () => {
     setShowp(true);
 
   }
-  // const handlecompressedDownload = () => {
-  //   const downloadLink = document.createElement('a');
-  //   const fileData = new Blob([data.data], { type: 'application/octet-stream'});
-  //   const fileUrl = URL.createObjectURL(fileData);
+  const handlecompressedDownload = () => {
+    const encodedData = data.data; // Your encoded binary data
+    const byteArray = new Uint8Array(encodedData.length);
 
-  //   downloadLink.href = fileUrl;
-  //   console.log(fileName)
-  //   downloadLink.download = fileName;
-  //   document.body.appendChild(downloadLink);
-  //   downloadLink.click();
-  //   document.body.removeChild(downloadLink);
+    for (let i = 0; i < encodedData.length; i++) {
+      byteArray[i] = encodedData.charCodeAt(i);
+    }
 
-  //   URL.revokeObjectURL(fileUrl);
-  //   setShowDecompress(true);
-  //   setCompressionRatio(null)
-  //   setShowp(false);
-  // };
+    const blob = new Blob([byteArray], { type: 'application/octet-stream' });
+    saveAs(blob, fileName+".decompressed");
+
+      setShowDecompress(true);
+      setCompressionRatio(null)
+      setShowp(false);
+  };
   const handleDownload = () => {
     const encodedData = data.data; // Your encoded binary data
     const byteArray = new Uint8Array(encodedData.length);
@@ -174,7 +171,6 @@ const FileUploader = () => {
 
     axios.request(config)
     .then((response) => {
-      console.log((response.data));
       setData(response)
     })
     .catch((error) => {
@@ -245,12 +241,15 @@ const FileUploader = () => {
               </div>
             ))}
           </ul>
-          <button
+          { decompress?(<div>
+      <button onClick={handleDecompress}className='bg-blue-500 px-3 py-2 rounded-md mt-2 ml-2 hover:bg-blue-800'>Decompress File</button>
+      </div>): <button
             onClick={handleUpload}
             className="bg-green-500 text-white py-2 px-4 rounded mt-2"
           >
             Compress
-          </button>
+          </button>}
+         
         </div>
       )}
       {isLoading && (
@@ -289,13 +288,14 @@ const FileUploader = () => {
       )}
 
 
-      {data &&  (<div>
-      <button onClick={handleDownload}className='bg-green-500 px-5 py-2 rounded-md mt-2 ml-7 hover:bg-green-600'>Download File</button>
-      {showp && (<p>file decompressed, Please download</p>)}
+      {data &&  (<div>{decompress?(
+         <button onClick={handlecompressedDownload}className='bg-green-500 px-5 py-2 rounded-md mt-2 ml-2 hover:bg-green-600'>Download File</button>):
+      ( <button onClick={handleDownload}className='bg-green-500 px-5 py-2 rounded-md mt-2 ml-2 hover:bg-green-600'>Download File</button>)}
+     
+     
+      {showp && (<p>file decompressed, download now</p>)}
       </div>)}
-      { decompress && (<div>
-      <button onClick={handleDecompress}className='bg-blue-500 px-3 py-2 rounded-md mt-2 ml-7 hover:bg-blue-800'>Decompress File</button>
-      </div>)}
+    
 
       <div>
       {compressionRatio && (
