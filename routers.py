@@ -40,9 +40,6 @@ async def decompress(upload_file: UploadFile = File(...)):
     global compress_file_by_compressor
     if not compress_file_by_compressor:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED,detail="Initially the file should be compressed using above compressor API")
-    # file_path = f"temp/{upload_file.filename}"
-    # with open(file_path, "wb") as temp_file:
-    #     temp_file.write(await upload_file.read())
     global compressed_file
     decompressed_file_path = decompress_file(compressed_file)
     def iterate_file():
