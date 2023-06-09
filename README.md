@@ -5,8 +5,9 @@
 >1. Clone this repository to the desired location
 >2. Install pycharm and python of latest versions
 >3. Open the cloned repository in pycharm
->4. Set up the virtual environment
->5. Run the command to install the necessary modules:
+>4. Make a new directory named "temp"
+>5. Set up the virtual environment
+>6. Run the command to install the necessary modules:
 >   >pip install -r requirements.txt
->6. Run the command to run the backend
+>7. Run the command to run the backend
 >   >uvicorn main:app --reload
