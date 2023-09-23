@@ -303,6 +303,7 @@ const FileUploader = () => {
           <p>Size of file before compression: {compressionRatio['Size of file before compression']}</p>
           <p>Size of file after compression: {compressionRatio['Size of file after compression']}</p>
           <p>Compression Ratio: {compressionRatio['Compression Ratio(CR)']}</p>
+          <p>Compression Ratio(CR) from LWZ algorithm: {compressionRatio['Compression Ratio(CR) from LWZ algorithm']}</p>
         </div>
       ) }
     </div>
